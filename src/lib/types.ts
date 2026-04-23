@@ -14,6 +14,7 @@ export interface SearchParams {
   date: string; // YYYY-MM-DD
   mealTime: MealTime;
   sources: RatingPlatform[]; // user-chosen priority order
+  partySize: number;
 }
 
 export interface ReviewSource {
@@ -24,9 +25,11 @@ export interface ReviewSource {
 }
 
 export interface ReservationSlot {
-  time: string; // HH:MM
+  time: string; // HH:MM (24hr)
+  displayTime: string; // "7:00 PM"
   platform: "resy" | "opentable" | "yelp";
   url: string;
+  configType?: string; // "Dining Room", "Bar", "Patio", etc.
 }
 
 export interface Restaurant {

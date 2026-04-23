@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
   const sourcesParam = searchParams.get("sources");
   const priceMin = searchParams.get("priceMin");
   const priceMax = searchParams.get("priceMax");
+  const partySizeParam = searchParams.get("partySize");
 
   if (!location || !date || !mealTime) {
     return Response.json(
@@ -50,7 +51,12 @@ export async function GET(request: NextRequest) {
     ? { min: parseInt(priceMin), max: parseInt(priceMax) }
     : undefined;
 
-  const restaurants = await searchRestaurants(location, date, mealTime, sourceOrder, priceRange);
+  const parsedPartySize = partySizeParam ? parseInt(partySizeParam, 10) : 2;
+  const partySize = Number.isFinite(parsedPartySize) && parsedPartySize >= 1 && parsedPartySize <= 20
+    ? parsedPartySize
+    : 2;
+
+  const restaurants = await searchRestaurants(location, date, mealTime, sourceOrder, priceRange, partySize);
 
   return Response.json({
     restaurants,

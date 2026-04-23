@@ -70,7 +70,8 @@ export async function searchRestaurants(
   date: string,
   mealTime: MealTime,
   sourceOrder: RatingPlatform[] = DEFAULT_SOURCE_ORDER,
-  priceRange?: { min: number; max: number }
+  priceRange?: { min: number; max: number },
+  partySize: number = 2
 ): Promise<Restaurant[]> {
   const hasYelp = !!process.env.YELP_API_KEY;
   const hasGoogle = !!process.env.GOOGLE_PLACES_API_KEY;
@@ -162,24 +163,19 @@ export async function searchRestaurants(
     location,
     date,
     mealTime,
+    partySize,
     MIN_RESULTS
   );
 
-  // Step 3: Attach Resy data to ranked restaurants
-  const matchedResyKeys = new Set<string>();
+  // Step 3: Attach Resy slots to ranked restaurants
   for (const restaurant of ranked) {
     for (const [searchName, resyVenue] of resyResults) {
-      if (searchName.startsWith("resy:")) continue; // skip discovery results for now
+      if (searchName.startsWith("resy:")) continue;
       if (fuzzyMatch(restaurant.name, searchName) || fuzzyMatch(restaurant.name, resyVenue.name)) {
-        restaurant.reservations = [{
-          time: "See times",
-          platform: "resy",
-          url: resyVenue.resyUrl,
-        }];
+        restaurant.reservations = resyVenue.slots;
         if (!restaurant.imageUrl && resyVenue.imageUrl) {
           restaurant.imageUrl = resyVenue.imageUrl;
         }
-        matchedResyKeys.add(searchName);
         break;
       }
     }
@@ -200,14 +196,10 @@ export async function searchRestaurants(
       address: resyVenue.neighborhood,
       neighborhood: resyVenue.neighborhood,
       imageUrl: resyVenue.imageUrl || undefined,
-      reviews: [], // No review data yet — will only have Resy as a source
+      reviews: [],
       aggregateRating: 0,
       totalReviewCount: 0,
-      reservations: [{
-        time: "See times",
-        platform: "resy",
-        url: resyVenue.resyUrl,
-      }],
+      reservations: resyVenue.slots,
     });
   }
 

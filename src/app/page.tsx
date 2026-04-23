@@ -232,20 +232,31 @@ function RestaurantCard({
           <div className="pl-[52px]">
             <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest mb-3">
               <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse" />
-              Available on Resy
+              {restaurant.reservations.length} {restaurant.reservations.length === 1 ? "slot" : "slots"} on Resy
             </p>
             <div className="flex flex-wrap gap-2">
-              {restaurant.reservations.map((slot, i) => (
+              {restaurant.reservations.slice(0, 8).map((slot, i) => (
                 <a
-                  key={i}
+                  key={`${slot.time}-${i}`}
                   href={slot.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-950/40 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-900/50 transition-all border border-emerald-800/30 hover:border-emerald-700/50 hover:shadow-lg hover:shadow-emerald-950/20"
+                  title={slot.configType ? `${slot.displayTime} · ${slot.configType}` : slot.displayTime}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-950/40 text-emerald-400 rounded-xl text-sm font-semibold hover:bg-emerald-900/50 transition-all border border-emerald-800/30 hover:border-emerald-700/50 hover:shadow-lg hover:shadow-emerald-950/20"
                 >
-                  {slot.time === "See times" ? "🪑 Book on Resy →" : slot.time}
+                  {slot.displayTime}
                 </a>
               ))}
+              {restaurant.reservations.length > 8 && (
+                <a
+                  href={restaurant.reservations[0].url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 bg-stone-900 text-stone-400 rounded-xl text-sm font-semibold hover:bg-stone-800 transition-all border border-stone-800"
+                >
+                  +{restaurant.reservations.length - 8} more →
+                </a>
+              )}
             </div>
           </div>
         ) : (
@@ -265,6 +276,7 @@ export default function Home() {
     return d.toISOString().split("T")[0];
   });
   const [mealTime, setMealTime] = useState<MealTime>("dinner");
+  const [partySize, setPartySize] = useState(2);
   const [sourceOrder, setSourceOrder] = useState<RatingPlatform[]>([
     "michelin",
     "google",
@@ -291,6 +303,7 @@ export default function Home() {
         sources: sourceOrder.join(","),
         priceMin: String(priceRange[0]),
         priceMax: String(priceRange[1]),
+        partySize: String(partySize),
       });
       const res = await fetch(`/api/search?${params}`);
       const data = await res.json();
@@ -351,7 +364,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label
                   htmlFor="date"
@@ -383,6 +396,26 @@ export default function Home() {
                   {MEAL_TIMES.map((mt) => (
                     <option key={mt.value} value={mt.value}>
                       {mt.emoji} {mt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="partySize"
+                  className="block text-sm font-semibold text-stone-400 mb-2 tracking-wide"
+                >
+                  Party
+                </label>
+                <select
+                  id="partySize"
+                  value={partySize}
+                  onChange={(e) => setPartySize(parseInt(e.target.value, 10))}
+                  className="w-full px-5 py-4 rounded-xl bg-stone-950 border border-stone-700 focus:ring-2 focus:ring-rose-800 focus:border-rose-700 text-stone-100 transition-all"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                    <option key={n} value={n}>
+                      {n === 1 ? "1 person" : `${n} people`}
                     </option>
                   ))}
                 </select>
