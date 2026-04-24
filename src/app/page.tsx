@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Restaurant, MealTime, RatingPlatform, MichelinDistinction } from "@/lib/types";
+import { buildOpenTableSearchUrl } from "@/lib/opentable";
 
 const MEAL_TIMES: { value: MealTime; label: string; emoji: string }[] = [
   { value: "breakfast", label: "Breakfast", emoji: "☕" },
@@ -163,13 +164,27 @@ function MichelinBadge({ distinction }: { distinction: MichelinDistinction }) {
   );
 }
 
+interface SearchContext {
+  date: string;
+  mealTime: MealTime;
+  partySize: number;
+}
+
 function RestaurantCard({
   restaurant,
   rank,
+  searchContext,
 }: {
   restaurant: Restaurant;
   rank: number;
+  searchContext: SearchContext;
 }) {
+  const otUrl = buildOpenTableSearchUrl(
+    restaurant.name,
+    searchContext.date,
+    searchContext.mealTime,
+    searchContext.partySize
+  );
   return (
     <div className="group bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border border-stone-800 overflow-hidden hover:border-rose-900/60 hover:shadow-2xl hover:shadow-rose-950/30 transition-all duration-500">
       <div className="p-6">
@@ -199,7 +214,9 @@ function RestaurantCard({
               </p>
             </div>
           </div>
-          <RatingBadge rating={restaurant.aggregateRating} />
+          {restaurant.reviews.length > 0 && (
+            <RatingBadge rating={restaurant.aggregateRating} />
+          )}
         </div>
 
         <p className="text-sm text-stone-600 mb-4 pl-[52px]">
@@ -260,9 +277,19 @@ function RestaurantCard({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-stone-700 italic pl-[52px]">
-            No reservations found — walk-in or call
-          </p>
+          <div className="pl-[52px]">
+            <p className="text-[11px] font-bold text-stone-600 uppercase tracking-widest mb-3">
+              Not on Resy
+            </p>
+            <a
+              href={otUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-stone-300 rounded-xl text-sm font-semibold hover:bg-stone-800 transition-all border border-stone-800 hover:border-stone-700"
+            >
+              Check OpenTable →
+            </a>
+          </div>
         )}
       </div>
     </div>
@@ -523,6 +550,7 @@ export default function Home() {
                             key={r.id}
                             restaurant={r}
                             rank={++rank}
+                            searchContext={{ date, mealTime, partySize }}
                           />
                         ))}
                       </div>
@@ -544,6 +572,7 @@ export default function Home() {
                             key={r.id}
                             restaurant={r}
                             rank={++rank}
+                            searchContext={{ date, mealTime, partySize }}
                           />
                         ))}
                       </div>

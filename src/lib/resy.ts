@@ -80,8 +80,10 @@ interface ResyFindVenueEntry {
     name: string;
     url_slug: string;
     neighborhood?: string;
-    location?: { code: string };
+    location?: { code: string; neighborhood?: string };
     images?: string[];
+    // /4/find returns cuisine as a single string on `type`, not an array
+    type?: string;
     cuisine?: string[];
     price_range_id?: number;
   };
@@ -349,11 +351,13 @@ function venueEntryToResult(
   const slots = slotsFromFind(entry, cityCode, date, partySize, mealTime);
   if (slots.length === 0) return null;
   const v = entry.venue;
+  const cuisine = v.type || v.cuisine?.join(", ") || "Restaurant";
+  const neighborhood = v.neighborhood || v.location?.neighborhood || fallbackLocation;
   return {
     venueId: v.id.resy,
     name: v.name,
-    neighborhood: v.neighborhood || fallbackLocation,
-    cuisine: v.cuisine?.join(", ") || "Restaurant",
+    neighborhood,
+    cuisine,
     priceLevel: v.price_range_id || 2,
     imageUrl: v.images?.[0] || "",
     urlSlug: v.url_slug,
